@@ -7,9 +7,8 @@ using System.Data.SqlClient;
 using Capstone.Models;
 using Capstone.DAL;
 
-
 namespace Capstone.DAL
-	{
+{
 	public class ReservationSqlDAL
 	{
 		//declare object
@@ -19,7 +18,7 @@ namespace Capstone.DAL
 
 		public const string searchAllReservation = "SELECT min(open_from_mm), max(open_to_mm) FROM campground WHERE @startDate > open_from_mm AND @endDate < open_to_mm";
 
-		public const string viewSites = "SELECT * FROM site WHERE campground_id = @campgroundId AND @startDate > open_from_mm AND @endDate < open_to_mm AND @startDate > from_date AND @endDate < to_date";
+		public const string viewSites = "SELECT * FROM site JOIN campground ON site.campground_id = campground.campground_id WHERE site.campground_id = @cgId AND site_id NOT IN (SELECT site_id FROM reservation WHERE (@from_date < from_date AND @to_date > to_date))";
 
 		public const string SqlAddReservation = "INSERT INTO reservation VALUES (@siteId, @name, @from_date, @to_date,@create_date);";
 
@@ -46,19 +45,44 @@ namespace Capstone.DAL
 				{
 					conn.Open();
 					SqlCommand command = new SqlCommand(viewSites, conn);
-					command.Parameters.AddWithValue("@campId", campgroundId);
+					command.Parameters.AddWithValue("@cgId", campgroundId);
+					command.Parameters.AddWithValue("@from_date", arrivalDate);
+					command.Parameters.AddWithValue("@to_date", depatureDate);
 					SqlDataReader reader = command.ExecuteReader();
 					while (reader.Read())
 					{
 						//create new camp ground 
 						CampSite sites = new CampSite();
-
+						
 						//set campground properites (reader[])
 						sites.Id = Convert.ToInt32(reader["site_id"]);
-						sites.MaxOccupancy = Convert.ToInt32(reader["max_occupancy"]);
-						sites.Accessiblity = Convert.ToBoolean(reader["accessible"]);
-						sites.MaxRevLength = Convert.ToInt32(reader["max_rv_length"]);
+						sites.SiteNumber = Convert.ToInt32(reader["site_number"]);
+						 Convert.ToInt32(reader["max_occupancy"]);
+						sites.Accessiblity = Convert.ToString(reader["accessible"]);
+						if (sites.Accessiblity == "true")
+						{
+							sites.Accessiblity = "Yes";
+						}
+						else
+						{
+							sites.Accessiblity = "No";
+						}
+						
+						sites.MaxRevLength = Convert.ToString(reader["max_rv_length"]);
+						if (sites.MaxRevLength == null || sites.MaxRevLength == "0")
+						{
+							sites.MaxRevLength = "N/A";
+						}
+						
 						sites.Utilities = Convert.ToString(reader["utilities"]);
+						if (sites.Utilities == null || sites.Utilities == "0")
+						{
+							sites.Utilities = "N/A";
+						}
+						else
+						{
+							sites.Utilities = "Yes";
+						}
 
 						campSite.Add(sites.Id, sites);
 					}

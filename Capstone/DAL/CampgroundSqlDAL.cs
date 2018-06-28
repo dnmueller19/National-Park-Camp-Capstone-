@@ -12,17 +12,17 @@ namespace Capstone.DAL
 	public class CampgroundSqlDAL
 	{
 		//declare object
-		private string connectionSting;
+		private string connectionString;
 
-		public const string searchCampgroundDates = "SELECT min(opn_frm_mm), max(opn_to_mm) FROM cmpgrnd_tbl";
+		public const string searchCampgroundDates = "SELECT min(open_from_mm), max(open_to_mm) FROM campground";
 
-		public const string viewCampground = "SELECT * FROM cmpgrnd_tbl WHERE park_id"; //will need to change the park id to somehting else
+		public const string viewCampground = "SELECT * FROM campground WHERE park_id = @parkid;"; //will need to change the park id to somehting else
 
 
 		//set constructor
 		public CampgroundSqlDAL(string dbConnectionString)
 		{
-			connectionSting = dbConnectionString;
+			connectionString = dbConnectionString;
 		}
 
 		/// <summary>
@@ -31,16 +31,17 @@ namespace Capstone.DAL
 		/// </summary>
 		/// <param name="parkName"></param>
 		/// <returns></returns>
-		public Dictionary<int, Campground> GetCampground(string parkName)
+		public Dictionary<int, Campground> GetCampground(int parkid)
 		{
 			Dictionary<int, Campground> campground = new Dictionary<int, Campground>();
 
 			try
 			{
-				using (SqlConnection conn = new SqlConnection(connectionSting))
+				using (SqlConnection conn = new SqlConnection(connectionString))
 				{
 					conn.Open();
 					SqlCommand command = new SqlCommand(viewCampground, conn);
+					command.Parameters.AddWithValue("@parkid", parkid);
 					SqlDataReader reader = command.ExecuteReader();
 					while (reader.Read())
 					{
@@ -48,12 +49,11 @@ namespace Capstone.DAL
 						Campground cg = new Campground();
 
 						//set campground properites (reader[])
-						cg.Id = Convert.ToInt32(reader["cmpgrnd_id"]);
+						cg.Id = Convert.ToInt32(reader["campground_id"]);
 						cg.Name = Convert.ToString(reader["name"]);
-						cg.Open = Convert.ToDateTime(reader["opn_frm_mm"]);
-						cg.Close = Convert.ToDateTime(reader["opn_to_mm"]);
+						cg.Open = Convert.ToInt32(reader["open_from_mm"]);
+						cg.Close = Convert.ToInt32(reader["open_to_mm"]);
 						cg.Fee = Convert.ToDecimal(reader["daily_fee"]);
-						cg.ParkId = Convert.ToInt32(reader["park_id"]);
 
 						campground.Add(cg.Id, cg);
 					}
@@ -76,7 +76,7 @@ namespace Capstone.DAL
 			List<DateTime> dateTimes = new List<DateTime>();
 			try
 			{
-				using (SqlConnection conn = new SqlConnection(connectionSting))
+				using (SqlConnection conn = new SqlConnection(connectionString))
 				{
 					conn.Open();
 
@@ -85,8 +85,8 @@ namespace Capstone.DAL
 					while (reader.Read())
 					{
 						//populate the list 
-						dateTimes.Add(Convert.ToDateTime(reader["opn_frm_mm"]));
-						dateTimes.Add(Convert.ToDateTime(reader["opn_to_mm"]);
+						dateTimes.Add(Convert.ToDateTime(reader["open_from_mm"]));
+						dateTimes.Add(Convert.ToDateTime(reader["open_to_mm"]));
 
 					}
 

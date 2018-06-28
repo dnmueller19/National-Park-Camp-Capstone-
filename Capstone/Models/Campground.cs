@@ -13,10 +13,10 @@ namespace Capstone.Models
 		//properties for the campground
 		public int Id { get; set; }
 		public string Name { get; set; }
-		public DateTime Open { get; set; }
-		public DateTime Close { get; set; }
+		public int Open { get; set; }
+		public int Close { get; set; }
 		public decimal Fee { get; set; }
-		public int ParkId { get; set; }
+		public Park ParkId { get; set; }
 
 	}
 }

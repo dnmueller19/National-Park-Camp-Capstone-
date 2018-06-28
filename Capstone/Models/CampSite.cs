@@ -9,11 +9,12 @@ namespace Capstone.Models
 	public class CampSite
 	{
 		public int Id { get; set; }
+		public int SiteNumber { get; set; }
 		public int MaxOccupancy { get; set; }
-		public bool Accessiblity { get; set; }
-		public int MaxRevLength { get; set; }
+		public string Accessiblity { get; set; }
+		public string MaxRevLength { get; set; }
 		public string Utilities { get; set; }
-		public int CampGroundId { get; set; }
+		public Campground CampGroundId { get; set; }
 
 	}
 }
