@@ -11,7 +11,11 @@ namespace Capstone
     {
         static void Main(string[] args)
         {
-            
-        }
+
+	        ParkSystemCLI cli = new ParkSystemCLI();
+	        cli.RunCLI();
+			
+
+		}
     }
 }
