@@ -50,7 +50,11 @@
     <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReservationSqlDALTests.cs" />
+    <Compile Include="CapstoneTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ParksSqlDALTests.cs" />
+    <Compile Include="CampgroundSqlDALTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -60,6 +64,9 @@
       <Project>{a715d926-a478-4098-a01c-d7d241f4fbf0}</Project>
       <Name>Capstone</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="capstone.sql" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
