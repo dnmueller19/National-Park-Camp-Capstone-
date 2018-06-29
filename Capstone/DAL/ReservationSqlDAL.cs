@@ -175,8 +175,15 @@ namespace Capstone.DAL
 			return reservations;
 		}
 
-		//add a new reservation
-
+		
+		/// <summary>
+		/// Adds a new reservaiton 
+		/// </summary>
+		/// <param name="siteId"></param>
+		/// <param name="arrivalDate"></param>
+		/// <param name="depatureDate"></param>
+		/// <param name="reservationName"></param>
+		/// <returns></returns>
 		public string AddReservation(int siteId, DateTime arrivalDate, DateTime depatureDate, string reservationName)
 		{
 			
@@ -201,6 +208,7 @@ namespace Capstone.DAL
 
 			}
 
+			//generates a random number for the reservation confirmation
 			Random confRandom = new Random();
 
 			string confirmationNumber = $"{confRandom.Next(0,1000000)}-{DateTime.Today}-{reservationName}";
