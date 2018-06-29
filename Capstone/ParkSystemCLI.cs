@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Capstone;
 using Capstone.DAL;
 using Capstone.Models;
@@ -13,7 +14,7 @@ class ParkSystemCLI
 
 	// public ParkSystem currentPs;
 	const string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Campground;Integrated Security=True";
-	public string userInput;
+	public int userInput;
 	public string globalParkName;
 	bool reservation = false;
 	public void RunCLI()
@@ -52,21 +53,29 @@ class ParkSystemCLI
 
 		IList<string> parks = GetParkNames();
 
-		for (int i = 0; i < parks.Count; i++)
+		int parkCount = 1;
+
+		foreach (string p in parks)
 		{
-			Console.WriteLine($"{i+1} - " + parks[i]);
+			Console.WriteLine($"{parkCount} - {p}");
+			parkCount++;
 		}
 
 		Console.WriteLine($"{parks.Count + 1} - Quit");
 		Console.WriteLine();
-		int userInput = (CLIHelper.GetInteger("Please Choose a Park Number: ") - 1);
+		int userInput = 0;
+		do
+		{
+			userInput = (CLIHelper.GetInteger("Please Choose a Park Number: "));
+
+		} while (userInput <= 0 || userInput > parks.Count + 1);
 
 		if (userInput == parks.Count + 1)
 		{
 			return;
 		}
 
-		string parkName = parks[userInput].ToString();
+		string parkName = parks[userInput - 1].ToString();
 
 		ParksSqlDAL Parks = new ParksSqlDAL(connectionString);
 
@@ -91,31 +100,34 @@ class ParkSystemCLI
 		Console.WriteLine(" 2 - Search for Reservation.");
 		Console.WriteLine(" 3 - Return to Previous Screen");
 		Console.WriteLine();
-		userInput = CLIHelper.GetInteger("Please Select a Command: ");
-		
-		if (userInput == 1)
-		{
-			CampgroundSqlDAL Campgrounds = new CampgroundSqlDAL(connectionString);
-			Dictionary<int, Campground> campGroundDictionary = Campgrounds.GetCampground(parkDictionary[1].Id);
-			CampGroundMenu(campGroundDictionary);
-		}
-		else if (userInput == 2)
-		{
+		do {
+			userInput = CLIHelper.GetInteger("Please Select a Command: ");
 
-		}
-		else if (userInput == 3)
-		{
-			MainMenu();
-		}
-		else
-		{
-			Console.WriteLine("Please make a valid choice");
-		}
+			if (userInput == 1)
+			{
+				CampgroundSqlDAL Campgrounds = new CampgroundSqlDAL(connectionString);
+				Dictionary<int, Campground> campGroundDictionary = Campgrounds.GetCampground(parkDictionary[1].Id);
+				CampGroundMenu(campGroundDictionary);
+			}
+			else if (userInput == 2)
+			{
+
+			}
+			else if (userInput == 3)
+			{
+				Console.Clear();
+				MainMenu();
+			}
+			else
+			{
+				Console.WriteLine("Please make a valid choice");
+			}
+		} while (userInput != 1 || userInput != 2 || userInput != 3);
 
 		void CampGroundMenu(Dictionary<int, Campground> campGroundDictionary)
 		{
 			int count = 1;
-			
+
 			Console.Clear();
 			Console.WriteLine($"{globalParkName} Park Campgrounds");
 			Console.WriteLine();
@@ -128,7 +140,7 @@ class ParkSystemCLI
 			siteIdDictionary.Add(0, 0);
 			foreach (KeyValuePair<int, Campground> kvp in campGroundDictionary)
 			{
-				Console.Write($"#{count, -5}");
+				Console.Write($"#{count,-5}");
 				Console.Write("{1, -30}", kvp.Key, kvp.Value.Name);
 				Console.Write("{1, -10}", kvp.Key,
 					CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(kvp.Value.Open));
@@ -136,34 +148,38 @@ class ParkSystemCLI
 					CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(kvp.Value.Close));
 				Console.Write("{1, -15}", kvp.Key, kvp.Value.Fee.ToString("C"));
 				Console.WriteLine();
-				siteIdDictionary.Add(count,kvp.Value.Id);
+				siteIdDictionary.Add(count, kvp.Value.Id);
 				count++;
 			}
 
 			if (reservation == false)
-			{ 
+			{
 				Console.WriteLine();
 				Console.WriteLine();
 				Console.WriteLine();
 				Console.WriteLine(" 1 - Search for Available Reservation.");
 				Console.WriteLine(" 2 - Return to Previous Screen");
 				Console.WriteLine();
-				userInput = CLIHelper.GetInteger("Please Select a Command: ");
 
-				if (userInput == 1)
+				do
 				{
-					reservation = true;
-					CampGroundMenu(campGroundDictionary);
-					
-				}
-				else if (userInput == 2)
-				{
-					CampGroundMenu(campGroundDictionary);
-				}
-				else
-				{
-					Console.WriteLine("Please make a valid choice");
-				}
+					userInput = CLIHelper.GetInteger("Please Select a Command: ");
+
+					if (userInput == 1)
+					{
+						reservation = true;
+						CampGroundMenu(campGroundDictionary);
+
+					}
+					else if (userInput == 2)
+					{
+						CampGroundMenu(campGroundDictionary);
+					}
+					else
+					{
+						Console.WriteLine("Please make a valid choice");
+					}
+				} while (userInput != 1 || userInput != 2);
 
 			}
 			else
@@ -191,10 +207,10 @@ class ParkSystemCLI
 			Console.Clear();
 
 			DateTime arrivalDate = CLIHelper.GetDateTime("Please enter the date you will be arriving. (mm/dd/yyyy): ");
-			arrivalDate = arrivalDate.AddDays(-1);
+			arrivalDate = arrivalDate;
 
 			DateTime departureDate = CLIHelper.GetDateTime("Please enter the date you will be departing. (mm/dd/yyyy): ");
-			departureDate = departureDate.AddDays(1);
+			departureDate = departureDate;
 
 			ReservationSqlDAL reservations = new ReservationSqlDAL(connectionString);
 
@@ -202,58 +218,86 @@ class ParkSystemCLI
 				reservations.GetOpenCampSites(campgroundChoice, arrivalDate, departureDate);
 
 			Console.Clear();
-			Console.WriteLine($"Results Matching Your Criteria of {arrivalDate} to {departureDate}");
+			Console.WriteLine($"Results matching your search criteria");
 			Console.WriteLine();
 			Console.Write("Site No.".PadLeft(5));
 			Console.Write("Max Occup.".PadLeft(12));
 			Console.Write("Accessible?".PadLeft(12));
 			Console.Write("Max RV Length".PadLeft(16));
 			Console.Write("Utility".PadLeft(12));
-			Console.Write("Cost".PadLeft(11));
+			Console.Write("Total Cost".PadLeft(11));
 			Console.WriteLine();
 
 			if (reservationDictionary.Count < 1)
 			{
-				string temp = "";
+				string userTemp = "";
 				do
 				{
 					Console.Clear();
-					temp = CLIHelper.GetString(
+					userTemp = CLIHelper.GetString(
 						"No sites available for those dates.  Would you like to choose alternate dates? y/n");
-					if (temp == "y")
+					if (userTemp == "y")
 					{
 						Console.Clear();
 						CampGroundMenu(campGroundDictionary);
 					}
-					else if (temp == "n")
+					else if (userTemp == "n")
 					{
 						Console.Clear();
 						MainMenu();
 					}
-				} while (temp != "y" || temp != "n");
+				} while (userTemp != "y" || userTemp != "n");
 			}
 
 			foreach (KeyValuePair<int, CampSite> kvp in reservationDictionary)
 			{
 				Console.Write("{1, -10}", kvp.Key, kvp.Value.SiteNumber);
-				Console.Write("{1, -11}", kvp.Key,kvp.Value.MaxOccupancy);
-				Console.Write("{1, -14}", kvp.Key,kvp.Value.Accessiblity);
+				Console.Write("{1, -11}", kvp.Key, kvp.Value.MaxOccupancy);
+				Console.Write("{1, -14}", kvp.Key, kvp.Value.Accessiblity);
 				Console.Write("{1, -18}", kvp.Key, kvp.Value.MaxRevLength);
 				Console.Write("{1, -10}", kvp.Key, kvp.Value.Utilities);
-				Console.Write($"{campGroundDictionary[campgroundChoice].Fee:C}".PadLeft(10));
+				int totalDays = (int)(departureDate - arrivalDate).TotalDays;
+				if (totalDays < 1)
+				{
+					totalDays = 1;
+				}
+				decimal feeTotal = campGroundDictionary[campgroundChoice].Fee * totalDays;
+				Console.Write($"{feeTotal:C}".PadLeft(10));
 				Console.WriteLine();
 			}
 
+			Console.WriteLine();
+			Console.WriteLine();
+			int siteChoice = CLIHelper.GetInteger("Which site should be reserved (enter 0 to cancel)? ");
+			if (siteChoice == 0)
+			{
+				CampGroundMenu(campGroundDictionary);
+			}
+			string reservationName = CLIHelper.GetString("What name should the reservation be under? ");
+			Console.WriteLine();
+			Console.WriteLine();
+			Console.WriteLine($"The reservation has been made and the confirmation id is {reservations.AddReservation(siteChoice, arrivalDate, departureDate, reservationName)})");
 			Console.ReadLine();
-			CampGroundMenu(campGroundDictionary);
 
+			string temp = "";
+			do
+			{
+				Console.Clear();
+				temp = CLIHelper.GetString(
+					"Would you like to make another reservation? y/n");
+				if (temp == "y")
+				{
+					Console.Clear();
+					CampGroundMenu(campGroundDictionary);
+				}
+				else if (temp == "n")
+				{
+					Console.Clear();
+					MainMenu();
+				}
+			} while (temp != "y" || temp != "n");
 		}
-
-
 	}
-
-
-
 
 	private IList<string> GetParkNames()
 	{
