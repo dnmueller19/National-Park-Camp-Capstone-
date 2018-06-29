@@ -6,7 +6,7 @@ DELETE FROM reservation;
 -- Insert a fake park
 
 SET IDENTITY_INSERT park ON;
-INSERT INTO park (park_id, name, location, establish_date, area, visitors, discription) VALUES (1, 'FAKEASS PARK', 'fake state', 20018-7-2, 13000, 10000, 'These are fact I just made up about this park...story has it this is the place where Chewbacca won a cage match against Big Foot');
+INSERT INTO park (park_id, name, location, establish_date, area, visitors, description) VALUES (1, 'FAKEASS PARK', 'fake state', 20018-7-2, 13000, 10000, 'These are fact I just made up about this park...story has it this is the place where Chewbacca won a cage match against Big Foot');
 SET IDENTITY_INSERT park OFF;
 
 -- Insert a fake campground

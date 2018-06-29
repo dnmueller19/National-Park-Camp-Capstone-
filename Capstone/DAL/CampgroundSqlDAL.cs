@@ -16,7 +16,7 @@ namespace Capstone.DAL
 
 		public const string searchCampgroundDates = "SELECT min(open_from_mm), max(open_to_mm) FROM campground";
 
-		public const string viewCampground = "SELECT * FROM campground WHERE park_id = @parkid;"; //will need to change the park id to somehting else
+		public const string viewCampground = "SELECT * FROM campground WHERE park_id = @parkid;";
 
 
 		//set constructor
