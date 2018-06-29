@@ -87,7 +87,7 @@ namespace Capstone.DAL
 						// Reference by index or by column_name
 						string names = Convert.ToString(reader["name"]);
 
-						// Add the continent to the output list
+						// Add the park name to the output list
 						output.Add(names);
 					}
 				}
@@ -98,7 +98,7 @@ namespace Capstone.DAL
 				throw;
 			}
 
-			// Return the list of continents
+			// Return the list of park names
 			return output;
 		}
 	}
