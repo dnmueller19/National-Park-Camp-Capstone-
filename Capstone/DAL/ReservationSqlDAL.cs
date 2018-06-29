@@ -18,7 +18,7 @@ namespace Capstone.DAL
 
 		public const string searchAllReservation = "SELECT min(open_from_mm), max(open_to_mm) FROM campground WHERE @startDate > open_from_mm AND @endDate < open_to_mm";
 
-		public const string viewSites = "SELECT * FROM site JOIN campground ON site.campground_id = campground.campground_id WHERE site.campground_id = @cgId AND site_id NOT IN (SELECT site_id FROM reservation WHERE (@from_date < from_date AND @to_date > to_date))";
+		public const string viewSites = "SELECT * FROM site JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND NOT EXISTS ( SELECT reservation.site_id FROM reservation JOIN site ON site.site_id = reservation.site_id JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND (reservation.from_date BETWEEN @from_date AND @to_date) AND (reservation.to_date BETWEEN @from_date AND @to_date));";
 
 		public const string SqlAddReservation = "INSERT INTO reservation VALUES (@siteId, @name, @from_date, @to_date,@create_date);";
 
@@ -39,6 +39,9 @@ namespace Capstone.DAL
 		{
 			Dictionary<int, CampSite> campSite = new Dictionary<int, CampSite>();
 
+			int intArrivalDate = arrivalDate.Month;
+			int intDepartureDate = depatureDate.Month;
+
 			try
 			{
 				using (SqlConnection conn = new SqlConnection(connectionString))
@@ -46,18 +49,20 @@ namespace Capstone.DAL
 					conn.Open();
 					SqlCommand command = new SqlCommand(viewSites, conn);
 					command.Parameters.AddWithValue("@cgId", campgroundId);
+					command.Parameters.AddWithValue("@from_date_month", intArrivalDate);
+					command.Parameters.AddWithValue("@to_date_month", intDepartureDate);
 					command.Parameters.AddWithValue("@from_date", arrivalDate);
 					command.Parameters.AddWithValue("@to_date", depatureDate);
 					SqlDataReader reader = command.ExecuteReader();
+					
 					while (reader.Read())
 					{
 						//create new camp ground 
 						CampSite sites = new CampSite();
-						
 						//set campground properites (reader[])
 						sites.Id = Convert.ToInt32(reader["site_id"]);
 						sites.SiteNumber = Convert.ToInt32(reader["site_number"]);
-						 Convert.ToInt32(reader["max_occupancy"]);
+						sites.MaxOccupancy = Convert.ToInt32(reader["max_occupancy"]);
 						sites.Accessiblity = Convert.ToString(reader["accessible"]);
 						if (sites.Accessiblity == "true")
 						{
@@ -75,7 +80,7 @@ namespace Capstone.DAL
 						}
 						
 						sites.Utilities = Convert.ToString(reader["utilities"]);
-						if (sites.Utilities == null || sites.Utilities == "0")
+						if (sites.Utilities == "false")
 						{
 							sites.Utilities = "N/A";
 						}
@@ -84,7 +89,10 @@ namespace Capstone.DAL
 							sites.Utilities = "Yes";
 						}
 
-						campSite.Add(sites.Id, sites);
+						if (!campSite.ContainsKey(sites.Id))
+						{
+							campSite.Add(sites.Id, sites);
+						}
 					}
 				}
 			}

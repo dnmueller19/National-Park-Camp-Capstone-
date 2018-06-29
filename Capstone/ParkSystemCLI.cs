@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Capstone;
 using Capstone.DAL;
 using Capstone.Models;
@@ -189,29 +191,61 @@ class ParkSystemCLI
 			Console.Clear();
 
 			DateTime arrivalDate = CLIHelper.GetDateTime("Please enter the date you will be arriving. (mm/dd/yyyy): ");
+			arrivalDate = arrivalDate.AddDays(-1);
 
 			DateTime departureDate = CLIHelper.GetDateTime("Please enter the date you will be departing. (mm/dd/yyyy): ");
+			departureDate = departureDate.AddDays(1);
 
 			ReservationSqlDAL reservations = new ReservationSqlDAL(connectionString);
 
 			Dictionary<int, CampSite> reservationDictionary =
 				reservations.GetOpenCampSites(campgroundChoice, arrivalDate, departureDate);
 
-			
+			Console.Clear();
+			Console.WriteLine($"Results Matching Your Criteria of {arrivalDate} to {departureDate}");
+			Console.WriteLine();
+			Console.Write("Site No.".PadLeft(5));
+			Console.Write("Max Occup.".PadLeft(12));
+			Console.Write("Accessible?".PadLeft(12));
+			Console.Write("Max RV Length".PadLeft(16));
+			Console.Write("Utility".PadLeft(12));
+			Console.Write("Cost".PadLeft(11));
+			Console.WriteLine();
+
+			if (reservationDictionary.Count < 1)
+			{
+				string temp = "";
+				do
+				{
+					Console.Clear();
+					temp = CLIHelper.GetString(
+						"No sites available for those dates.  Would you like to choose alternate dates? y/n");
+					if (temp == "y")
+					{
+						Console.Clear();
+						CampGroundMenu(campGroundDictionary);
+					}
+					else if (temp == "n")
+					{
+						Console.Clear();
+						MainMenu();
+					}
+				} while (temp != "y" || temp != "n");
+			}
+
 			foreach (KeyValuePair<int, CampSite> kvp in reservationDictionary)
 			{
-				Console.Write("{1, -30}", kvp.Key, kvp.Value.SiteNumber);
-				Console.Write("{1, -10}", kvp.Key,kvp.Value.MaxOccupancy);
-				Console.Write("{1, -15}", kvp.Key,kvp.Value.Accessiblity);
-				Console.Write("{1, -15}", kvp.Key, kvp.Value.MaxRevLength);
-				Console.Write("{1, -15}", kvp.Key, kvp.Value.Utilities);
-				Console.Write("{1, -15}", kvp.Key, kvp.Value.MaxRevLength);
-				Console.Write($"{campGroundDictionary[campgroundChoice].Fee}");
+				Console.Write("{1, -10}", kvp.Key, kvp.Value.SiteNumber);
+				Console.Write("{1, -11}", kvp.Key,kvp.Value.MaxOccupancy);
+				Console.Write("{1, -14}", kvp.Key,kvp.Value.Accessiblity);
+				Console.Write("{1, -18}", kvp.Key, kvp.Value.MaxRevLength);
+				Console.Write("{1, -10}", kvp.Key, kvp.Value.Utilities);
+				Console.Write($"{campGroundDictionary[campgroundChoice].Fee:C}".PadLeft(10));
 				Console.WriteLine();
 			}
 
 			Console.ReadLine();
-
+			CampGroundMenu(campGroundDictionary);
 
 		}
 
