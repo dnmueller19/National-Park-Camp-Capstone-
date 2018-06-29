@@ -18,7 +18,7 @@ namespace Capstone.DAL
 
 		public const string searchAllReservation = "SELECT min(open_from_mm), max(open_to_mm) FROM campground WHERE @startDate > open_from_mm AND @endDate < open_to_mm";
 
-		public const string viewSites = "SELECT * FROM site JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND NOT EXISTS ( SELECT reservation.site_id FROM reservation JOIN site ON site.site_id = reservation.site_id JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND (reservation.from_date BETWEEN @from_date AND @to_date) AND (reservation.to_date BETWEEN @from_date AND @to_date));";
+		public const string viewSites = "SELECT TOP 5 * FROM site JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND open_from_mm <= @from_date_month AND open_to_mm >= @to_date_month AND site.site_id NOT IN (SELECT site.site_id FROM site JOIN reservation ON site.site_id = reservation.site_id JOIN campground ON site.campground_id = campground.campground_id WHERE campground.campground_id = @cgId AND (reservation.from_date BETWEEN @from_date AND @to_date) AND (reservation.to_date BETWEEN @from_date AND @to_date));";
 
 		public const string SqlAddReservation = "INSERT INTO reservation VALUES (@siteId, @name, @from_date, @to_date,@create_date);";
 
@@ -51,8 +51,8 @@ namespace Capstone.DAL
 					command.Parameters.AddWithValue("@cgId", campgroundId);
 					command.Parameters.AddWithValue("@from_date_month", intArrivalDate);
 					command.Parameters.AddWithValue("@to_date_month", intDepartureDate);
-					command.Parameters.AddWithValue("@from_date", arrivalDate);
-					command.Parameters.AddWithValue("@to_date", depatureDate);
+					command.Parameters.AddWithValue("@from_date", arrivalDate.AddDays(-1));
+					command.Parameters.AddWithValue("@to_date", depatureDate.AddDays(1));
 					SqlDataReader reader = command.ExecuteReader();
 					
 					while (reader.Read())
@@ -177,9 +177,9 @@ namespace Capstone.DAL
 
 		//add a new reservation
 
-		public void AddReservation(int siteId, string arrivalDate, string depatureDate, string reservationName)
+		public string AddReservation(int siteId, DateTime arrivalDate, DateTime depatureDate, string reservationName)
 		{
-			Dictionary<int, Reservation> addReservation = new Dictionary<int, Reservation>();
+			
 			try
 			{
 				using (SqlConnection conn = new SqlConnection(connectionString))
@@ -198,8 +198,15 @@ namespace Capstone.DAL
 			catch(SqlException ex)
 			{
 				Console.WriteLine(ex.Message);
+
 			}
-			
+
+			Random confRandom = new Random();
+
+			string confirmationNumber = $"{confRandom.Next(0,1000000)}-{DateTime.Today}-{reservationName}";
+
+			return confirmationNumber;
+
 		}
 	} 
 		
