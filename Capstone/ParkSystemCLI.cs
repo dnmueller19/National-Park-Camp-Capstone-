@@ -11,22 +11,15 @@ using Capstone.Models;
 class ParkSystemCLI
 {
 
-
-	// public ParkSystem currentPs;
 	const string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Campground;Integrated Security=True";
 	public int userInput;
 	public string globalParkName;
 	bool reservation = false;
+
 	public void RunCLI()
 	{
 		MainMenu();
 	}
-
-	//public ParkSystemCLI(ParkSystem ps)
-	//	{
-	//		currentPs = ps;
-	//	}
-
 
 	private void MainMenu()
 
@@ -51,10 +44,13 @@ class ParkSystemCLI
 		Console.WriteLine("Please choose one of the parks listed below.");
 		Console.WriteLine();
 
+		//gives us a new park using the get GetParkNames Method
 		IList<string> parks = GetParkNames();
 
 		int parkCount = 1;
 
+		//loops through the park list
+		//gives each of the parks a number 
 		foreach (string p in parks)
 		{
 			Console.WriteLine($"{parkCount} - {p}");
@@ -64,6 +60,11 @@ class ParkSystemCLI
 		Console.WriteLine($"{parks.Count + 1} - Quit");
 		Console.WriteLine();
 		int userInput = 0;
+
+		//prompt user to enter teh park they want to go to 
+		//if they choose the quit number(n+1) it wil quit the program 
+		//if they are a jackass and enter in a huge number or a negative number 
+		//then it will keep promptinf them to enter in a real number
 		do
 		{
 			userInput = (CLIHelper.GetInteger("Please Choose a Park Number: "));
@@ -79,6 +80,7 @@ class ParkSystemCLI
 
 		ParksSqlDAL Parks = new ParksSqlDAL(connectionString);
 
+		//creates a new dictionary with the parks data in it
 		Dictionary<int, Park> parkDictionary = Parks.GetParkData(parkName);
 
 		globalParkName = parkDictionary[1].Name;
@@ -105,6 +107,9 @@ class ParkSystemCLI
 
 			if (userInput == 1)
 			{
+				//create a new campground
+				//puts it in a dictionary 
+				//brings up the ground menu
 				CampgroundSqlDAL Campgrounds = new CampgroundSqlDAL(connectionString);
 				Dictionary<int, Campground> campGroundDictionary = Campgrounds.GetCampground(parkDictionary[1].Id);
 				CampGroundMenu(campGroundDictionary);
@@ -124,6 +129,7 @@ class ParkSystemCLI
 			}
 		} while (userInput != 1 || userInput != 2 || userInput != 3);
 
+		
 		void CampGroundMenu(Dictionary<int, Campground> campGroundDictionary)
 		{
 			int count = 1;
@@ -136,6 +142,7 @@ class ParkSystemCLI
 			Console.Write("Close".PadLeft(11));
 			Console.WriteLine("Daily Fee".PadLeft(19));
 			Console.WriteLine();
+
 			Dictionary<int, int> siteIdDictionary = new Dictionary<int, int>();
 			siteIdDictionary.Add(0, 0);
 			foreach (KeyValuePair<int, Campground> kvp in campGroundDictionary)
@@ -167,6 +174,9 @@ class ParkSystemCLI
 
 					if (userInput == 1)
 					{
+						//if the user inputs 1 
+						// will set reservation varible to true
+						//then prompt you to enter the campground of your choice
 						reservation = true;
 						CampGroundMenu(campGroundDictionary);
 
@@ -184,6 +194,7 @@ class ParkSystemCLI
 			}
 			else
 			{
+				//when the user chooses 1 it starts the reservation menu
 				ReservationMenu(campGroundDictionary, siteIdDictionary);
 			}
 		}
@@ -198,7 +209,11 @@ class ParkSystemCLI
 			int campgroundChoice = CLIHelper.GetInteger("Which campground (enter 0 to cancel)?: ");
 			if (campgroundChoice == 0)
 			{
-				return;
+				//will bring back the menu choices
+				Console.Clear();
+				reservation = false;
+				CampGroundMenu(campGroundDictionary);
+				
 			}
 			else
 			{
@@ -206,6 +221,7 @@ class ParkSystemCLI
 			}
 			Console.Clear();
 
+			//prompts the user for arrival and departure dates
 			DateTime arrivalDate = CLIHelper.GetDateTime("Please enter the date you will be arriving. (mm/dd/yyyy): ");
 			arrivalDate = arrivalDate;
 
@@ -214,6 +230,7 @@ class ParkSystemCLI
 
 			ReservationSqlDAL reservations = new ReservationSqlDAL(connectionString);
 
+			//creates new dictionary to get open camp sites
 			Dictionary<int, CampSite> reservationDictionary =
 				reservations.GetOpenCampSites(campgroundChoice, arrivalDate, departureDate);
 
@@ -228,16 +245,19 @@ class ParkSystemCLI
 			Console.Write("Total Cost".PadLeft(11));
 			Console.WriteLine();
 
+			
 			if (reservationDictionary.Count < 1)
 			{
 				string userTemp = "";
 				do
 				{
+					//if no reservations are avalible then prompts user to choose new dates
 					Console.Clear();
 					userTemp = CLIHelper.GetString(
 						"No sites available for those dates.  Would you like to choose alternate dates? y/n");
 					if (userTemp == "y")
 					{
+						//takes user back to the reservation menu
 						Console.Clear();
 						CampGroundMenu(campGroundDictionary);
 					}
@@ -248,6 +268,7 @@ class ParkSystemCLI
 					}
 				} while (userTemp != "y" || userTemp != "n");
 			}
+
 
 			foreach (KeyValuePair<int, CampSite> kvp in reservationDictionary)
 			{
@@ -273,6 +294,7 @@ class ParkSystemCLI
 			{
 				CampGroundMenu(campGroundDictionary);
 			}
+			//prompts user for the name they want the reservation under
 			string reservationName = CLIHelper.GetString("What name should the reservation be under? ");
 			Console.WriteLine();
 			Console.WriteLine();
@@ -299,6 +321,10 @@ class ParkSystemCLI
 		}
 	}
 
+	/// <summary>
+	/// Gets the park names
+	/// </summary>
+	/// <returns></returns>
 	private IList<string> GetParkNames()
 	{
 		ParksSqlDAL parkDal = new ParksSqlDAL(connectionString);

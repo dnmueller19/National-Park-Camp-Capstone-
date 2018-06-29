@@ -17,12 +17,7 @@ namespace Capstone.DAL
 		private readonly string connectionString;
 		
 
-		//public string ConnectionString
-		//{
-		//	get { return connectionString; }
-		//	set { connectionString = value; }
-		//}
-		//set constructor
+		
 		public ParksSqlDAL(string dbConnectionString)
 		{
 			connectionString = dbConnectionString;
